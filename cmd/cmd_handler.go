@@ -11,9 +11,8 @@ import (
 	"os"
 	"reflect"
 
-	"axis.com/dawn/go/docker_dawn/dockermachine"
-
 	"github.com/staffano/crazy-build/artifact"
+	"github.com/staffano/crazy-build/dockermachine"
 	"github.com/staffano/crazy-build/workspace"
 )
 

@@ -19,8 +19,13 @@ var variables map[string]string
 
 var configuration *Config
 
-const wspConfigFolder string = ".crazy_build"
-const configFile string = "config.json"
+// WspConfigFolder is the workspace config folder that marks the
+// root of the workspace
+const WspConfigFolder string = ".crazy_build"
+
+// ConfigFile is the filename of the config file holding workspace
+// configuration
+const ConfigFile string = "config.json"
 
 func getWorkspaceRoot(d ...string) string {
 	if v, exist := variables["WORKSPACE"]; exist {
@@ -38,7 +43,8 @@ func getWorkspaceRoot(d ...string) string {
 		if cwd == "." || strings.HasSuffix(cwd, string(filepath.Separator)) {
 			return ""
 		}
-		if _, err := os.Stat(filepath.Join(cwd, wspConfigFolder)); err == nil {
+
+		if _, err := os.Stat(filepath.Join(cwd, WspConfigFolder)); err == nil {
 			return cwd
 		}
 		cwd = filepath.Dir(cwd)
@@ -51,7 +57,8 @@ func getConfigFilePath() string {
 	if wr == "." {
 		return ""
 	}
-	return filepath.Join(wr, wspConfigFolder, configFile)
+
+	return filepath.Join(wr, WspConfigFolder, ConfigFile)
 }
 
 // Init initializes the environment package by loading variables from
@@ -59,12 +66,14 @@ func getConfigFilePath() string {
 func Init() {
 	wspRoot := getWorkspaceRoot()
 	if wspRoot == "" {
-		log.Fatalf("No %s directory found.", wspConfigFolder)
+
+		log.Fatalf("No %s directory found.", WspConfigFolder)
 	}
 	configuration = new(Config)
 	configuration.Vars = make(map[string]string)
 	variables = make(map[string]string)
-	projectFile := filepath.Join(wspRoot, wspConfigFolder, "config.json")
+
+	projectFile := filepath.Join(wspRoot, WspConfigFolder, "config.json")
 	raw, err := os.Open(projectFile)
 	defer raw.Close()
 	if err != nil {
@@ -128,7 +137,7 @@ func Resolve(str string) string {
 // InitWorkspace initizliases a workspace at the
 // specified location
 func InitWorkspace(p string) error {
-	wspDir := filepath.Join(p, wspConfigFolder)
+	wspDir := filepath.Join(p, WspConfigFolder)
 	if _, err := os.Stat(wspDir); err == nil {
 		return nil
 	}

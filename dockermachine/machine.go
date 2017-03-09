@@ -7,7 +7,6 @@ import (
 
 	normalLog "log"
 
-	"axis.com/dawn/go/docker_dawn/configuration"
 	"github.com/docker/docker/client"
 	dockerClient "github.com/docker/docker/client"
 	"github.com/docker/go-connections/tlsconfig"
@@ -16,6 +15,7 @@ import (
 	"github.com/docker/machine/libmachine"
 	"github.com/docker/machine/libmachine/log"
 	"github.com/docker/machine/libmachine/state"
+	"github.com/staffano/crazy-build/workspace"
 )
 
 // Store tells which persistent store to use
@@ -28,7 +28,7 @@ const (
 	Default Store = iota
 
 	// Workspace creates and stores the docker
-	// machine inside ${WORKSPACE}/.ducker_dawn/docker/machine
+	// machine inside ${WORKSPACE}/.crazy_build/docker/machine
 	Workspace
 )
 
@@ -51,8 +51,8 @@ func GetBaseDir() string {
 	case Default:
 		return mcndirs.GetBaseDir()
 	case Workspace:
-		wd, _ := configuration.Get("WORKSPACE")
-		return filepath.Join(wd, ".ducker_dawn", "docker", "machine")
+		wd, _ := workspace.Get("WORKSPACE")
+		return filepath.Join(wd, workspace.WspConfigFolder, "docker", "machine")
 	}
 	return ""
 }
