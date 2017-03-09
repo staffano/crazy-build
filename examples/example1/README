@@ -1,1 +1,12 @@
-Testing
+So, how complicated can building hello world be?
+
+Here we have the hello world application cross-compiled with mingw-w64 
+using autotools inside a docker container that is controlled by our 
+go crazy builder.
+
+To run
+
+go get github.com/staffano/crazy-builder/examples/example1/cbt
+
+
+
