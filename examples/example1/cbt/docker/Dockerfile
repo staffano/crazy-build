@@ -13,4 +13,6 @@ RUN apt-get update && apt-get install -y wget autoconf automake \
     pkg-config gdbserver mingw-w64
 
 WORKDIR /build
+
+COPY ./clean.sh /
 CMD ['ls']

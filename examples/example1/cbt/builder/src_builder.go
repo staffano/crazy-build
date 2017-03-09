@@ -39,7 +39,7 @@ func NewAMBuilder() *AMBuilder {
 			{HostIP: "localhost",
 				HostPort: "5555"}},
 	}
-
+	builder.dockerImage.SuppressOutput = false
 	// Build the image
 	builder.dockerImage.Build()
 
@@ -52,6 +52,7 @@ func (builder AMBuilder) runCmd(cmd ...string) {
 	for _, v := range builder.GetArgs()[1:] {
 		rargs = append(rargs, v)
 	}
+	log.Printf("runCmd: %s", rargs)
 	builder.dockerImage.Run(rargs...)
 }
 
@@ -71,6 +72,7 @@ func (builder AMBuilder) Build(args ...string) {
 // Clean ...
 func (builder AMBuilder) Clean(args ...string) {
 	builder.runCmd("make", "distclean")
+	builder.runCmd("/bin/bash", "-x", "/clean.sh")
 }
 
 // Install ...

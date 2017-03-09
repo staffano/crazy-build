@@ -41,15 +41,16 @@ type VolumeMap struct {
 // We only allow whats called 'bind-mounts' in docker.
 type DockerArtifact struct {
 	BaseArtifact
-	DockerFile    string            // url to docker file
-	ContextFolder string            // Folder that is used to create the image
-	ContainerID   string            // Docker container id
-	ImageID       string            // The id of the docker image
-	Bindings      map[string]string // Mappings between host and container paths
-	VolumeMap     []string          // Volume mappings like "build_vol:/build:ro"
-	PortMap       nat.PortMap       // Port maps like 2223/tcp:2323
-	SecOpts       []string          // Security options like seccomp=unconfined
-	WorkingDir    string            // The current working dir the command will be executed in
+	DockerFile     string            // url to docker file
+	ContextFolder  string            // Folder that is used to create the image
+	ContainerID    string            // Docker container id
+	ImageID        string            // The id of the docker image
+	Bindings       map[string]string // Mappings between host and container paths
+	VolumeMap      []string          // Volume mappings like "build_vol:/build:ro"
+	PortMap        nat.PortMap       // Port maps like 2223/tcp:2323
+	SecOpts        []string          // Security options like seccomp=unconfined
+	WorkingDir     string            // The current working dir the command will be executed in
+	SuppressOutput bool              // Print less or more?
 }
 
 // NewDockerArtifact returns a new instance
@@ -153,7 +154,7 @@ func (d DockerArtifact) Build(args ...string) {
 	buildOptions := types.ImageBuildOptions{
 		Tags:           []string{d.ID()},
 		ForceRemove:    true,
-		SuppressOutput: true,
+		SuppressOutput: d.SuppressOutput,
 	}
 	buildCtx, _ := createDockerCtxt(workspace.Resolve(d.ContextFolder))
 	buildImageResponse, err := cli.ImageBuild(ctx, buildCtx, buildOptions)

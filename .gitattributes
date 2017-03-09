@@ -10,6 +10,7 @@
 # accessed from linux side via docker
 *.ac text eol=lf
 *.am text eol=lf
+*.sh text eol=lf
 
 # Denote all files that are truly binary and should not be modified.
 *.png binary
