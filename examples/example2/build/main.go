@@ -1,12 +1,13 @@
-// +build ignore
-
 package main
 
 import (
 	"flag"
+	"log"
+	"os"
 
 	"github.com/staffano/crazy-build/artifact"
 	"github.com/staffano/crazy-build/cmd"
+	"github.com/staffano/crazy-build/examples/example2/build/artifacts"
 	"github.com/staffano/crazy-build/workspace"
 )
 
@@ -19,9 +20,10 @@ import (
 // Instantiation is handled as a separate cmd
 
 func main() {
+	log.Printf("%v", os.Args)
 	flag.Parse()
 	workspace.Init()
-	LoadArtifacts()
+	artifact.Add(new(artifacts.PrintArtifact))
 	artifact.RegisterConfigurationInterest()
 	cmd.Execute()
 }

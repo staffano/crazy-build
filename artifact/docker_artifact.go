@@ -1,3 +1,5 @@
+// +build ignore
+
 package artifact
 
 import (
@@ -41,15 +43,17 @@ type VolumeMap struct {
 // We only allow whats called 'bind-mounts' in docker.
 type DockerArtifact struct {
 	BaseArtifact
-	DockerFile    string            // url to docker file
-	ContextFolder string            // Folder that is used to create the image
-	ContainerID   string            // Docker container id
-	ImageID       string            // The id of the docker image
-	Bindings      map[string]string // Mappings between host and container paths
-	VolumeMap     []string          // Volume mappings like "build_vol:/build:ro"
-	PortMap       nat.PortMap       // Port maps like 2223/tcp:2323
-	SecOpts       []string          // Security options like seccomp=unconfined
-	WorkingDir    string            // The current working dir the command will be executed in
+	DockerFile     string            // url to docker file
+	ContextFolder  string            // Folder that is used to create the image
+	ContainerID    string            // Docker container id
+	ImageID        string            // The id of the docker image
+	Bindings       map[string]string // Mappings between host and container paths
+	VolumeMap      []string          // Volume mappings like "build_vol:/build:ro"
+	PortMap        nat.PortMap       // Port maps like 2223/tcp:2323
+	SecOpts        []string          // Security options like seccomp=unconfined
+	WorkingDir     string            // The current working dir the command will be executed in
+	SuppressOutput bool              // Print less or more?
+	isBuilt        bool              // IS the image already?
 }
 
 // NewDockerArtifact returns a new instance
@@ -144,7 +148,10 @@ func fixPath(p string) string {
 }
 
 // Build a docker image or load it from repository
-func (d DockerArtifact) Build(args ...string) {
+func (d *DockerArtifact) Build(args ...string) {
+	if d.isBuilt {
+		return
+	}
 	ctx := context.Background()
 	cli, err := dockermachine.CreateClient()
 	if err != nil {
@@ -153,7 +160,7 @@ func (d DockerArtifact) Build(args ...string) {
 	buildOptions := types.ImageBuildOptions{
 		Tags:           []string{d.ID()},
 		ForceRemove:    true,
-		SuppressOutput: true,
+		SuppressOutput: d.SuppressOutput,
 	}
 	buildCtx, _ := createDockerCtxt(workspace.Resolve(d.ContextFolder))
 	buildImageResponse, err := cli.ImageBuild(ctx, buildCtx, buildOptions)
@@ -166,6 +173,7 @@ func (d DockerArtifact) Build(args ...string) {
 	if err != nil {
 		log.Fatalf("DisplayJSONMessagesStream error %s", err)
 	}
+	d.isBuilt = true
 }
 
 func getCid(c *client.Client, name string) (string, error) {
@@ -179,7 +187,6 @@ func getCid(c *client.Client, name string) (string, error) {
 		for _, n := range cont.Names {
 			if n == "/"+name {
 				return cont.ID, nil
-
 			}
 		}
 	}
@@ -204,7 +211,8 @@ func removeContainer(c *client.Client, name string) error {
 }
 
 // Run executes the docker container that was created in the Build method
-func (d DockerArtifact) Run(args ...string) {
+func (d *DockerArtifact) Run(args ...string) {
+	d.Build()
 	ctx := context.Background()
 	cli, err := dockermachine.CreateClient()
 	if err != nil {

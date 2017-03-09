@@ -2,6 +2,18 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Exempel 2",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "${workspaceRoot}/examples/example2/build/main.go",
+            "env": {},
+            "args": [
+                "--workspace=${workspaceRoot}\\examples\\example2",
+                "PrintArtifact.Print2"
+            ]
+        },
+        {
             "name": "Launch",
             "type": "go",
             "request": "launch",
@@ -11,7 +23,11 @@
             "host": "127.0.0.1",
             "program": "${workspaceRoot}/examples/example1/cbt",
             "env": {},
-            "args": ["ls", "/src"],
+            "args": [
+                "AMBuilder",
+                "test",
+                "--workspace=${workspaceRoot}\\examples\\example1"
+            ],
             "showLog": true
         }
     ]
