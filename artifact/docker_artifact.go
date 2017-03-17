@@ -1,3 +1,5 @@
+// +build ignore
+
 package artifact
 
 import (
@@ -51,6 +53,7 @@ type DockerArtifact struct {
 	SecOpts        []string          // Security options like seccomp=unconfined
 	WorkingDir     string            // The current working dir the command will be executed in
 	SuppressOutput bool              // Print less or more?
+	isBuilt        bool              // IS the image already?
 }
 
 // NewDockerArtifact returns a new instance
@@ -145,7 +148,10 @@ func fixPath(p string) string {
 }
 
 // Build a docker image or load it from repository
-func (d DockerArtifact) Build(args ...string) {
+func (d *DockerArtifact) Build(args ...string) {
+	if d.isBuilt {
+		return
+	}
 	ctx := context.Background()
 	cli, err := dockermachine.CreateClient()
 	if err != nil {
@@ -167,6 +173,7 @@ func (d DockerArtifact) Build(args ...string) {
 	if err != nil {
 		log.Fatalf("DisplayJSONMessagesStream error %s", err)
 	}
+	d.isBuilt = true
 }
 
 func getCid(c *client.Client, name string) (string, error) {
@@ -180,7 +187,6 @@ func getCid(c *client.Client, name string) (string, error) {
 		for _, n := range cont.Names {
 			if n == "/"+name {
 				return cont.ID, nil
-
 			}
 		}
 	}
@@ -205,7 +211,8 @@ func removeContainer(c *client.Client, name string) error {
 }
 
 // Run executes the docker container that was created in the Build method
-func (d DockerArtifact) Run(args ...string) {
+func (d *DockerArtifact) Run(args ...string) {
+	d.Build()
 	ctx := context.Background()
 	cli, err := dockermachine.CreateClient()
 	if err != nil {

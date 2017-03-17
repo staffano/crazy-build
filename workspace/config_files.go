@@ -3,6 +3,7 @@ package workspace
 import (
 	"encoding/json"
 	"errors"
+	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -27,10 +28,25 @@ const WspConfigFolder string = ".crazy_build"
 // configuration
 const ConfigFile string = "config.json"
 
-func getWorkspaceRoot(d ...string) string {
+// StampDirName is the directory containing all stamps,
+// which is markers that something has been done successfully
+const StampDirName string = "stamps"
+
+// WorkspaceRoot should be set to the root folder of the
+// workspace
+var WorkspaceRoot string
+
+// GetWorkspaceRoot returns the root path of the workspace
+func GetWorkspaceRoot(d ...string) string {
 	if v, exist := variables["WORKSPACE"]; exist {
+		WorkspaceRoot = v
 		return v
 	}
+
+	if WorkspaceRoot != "" {
+		return WorkspaceRoot
+	}
+
 	var cwd string
 	if len(d) == 0 {
 		cwd, _ = os.Getwd()
@@ -39,12 +55,12 @@ func getWorkspaceRoot(d ...string) string {
 	}
 
 	for true {
-		log.Printf("cwd=%s", cwd)
 		if cwd == "." || strings.HasSuffix(cwd, string(filepath.Separator)) {
 			return ""
 		}
 
 		if _, err := os.Stat(filepath.Join(cwd, WspConfigFolder)); err == nil {
+			WorkspaceRoot = cwd
 			return cwd
 		}
 		cwd = filepath.Dir(cwd)
@@ -52,8 +68,24 @@ func getWorkspaceRoot(d ...string) string {
 	return ""
 }
 
-func getConfigFilePath() string {
-	wr := getWorkspaceRoot()
+// GetStampDirPath returns the path within workspace config folder that
+// contains stamp files
+func GetStampDirPath() string {
+	dir := filepath.Join(GetWorkspaceRoot(), WspConfigFolder, StampDirName)
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		err = os.MkdirAll(dir, 0777)
+		if err != nil {
+			log.Fatalf("Error when creating %s: %v", dir, err)
+		}
+	}
+	return filepath.Join(GetWorkspaceRoot(), WspConfigFolder, StampDirName)
+}
+
+// GetConfigFilePath returns the path to the config file within
+// the workspace
+func GetConfigFilePath() string {
+	// GetWorkspaceRoot returns the root of the workspacefigFilePath() string {
+	wr := GetWorkspaceRoot()
 	if wr == "." {
 		return ""
 	}
@@ -64,7 +96,8 @@ func getConfigFilePath() string {
 // Init initializes the environment package by loading variables from
 // the project.json file
 func Init() {
-	wspRoot := getWorkspaceRoot()
+	// GetWorkspaceRoot returns the root of the workspace
+	wspRoot := GetWorkspaceRoot()
 	if wspRoot == "" {
 
 		log.Fatalf("No %s directory found.", WspConfigFolder)
@@ -104,9 +137,6 @@ func Get(k string) (string, bool) {
 
 // Configuration contains the config file
 func Configuration() *Config {
-	if configuration == nil {
-		Init()
-	}
 	return configuration
 }
 
@@ -154,7 +184,7 @@ func InitWorkspace(p string) error {
 
 // SaveConfig stores the file .crazy_build/config.json
 func SaveConfig() error {
-	cfgFile := getConfigFilePath()
+	cfgFile := GetConfigFilePath()
 	if cfgFile == "" {
 		return errors.New("couldn't find workspace filepath")
 	}
@@ -166,4 +196,8 @@ func SaveConfig() error {
 	}
 	enc := json.NewEncoder(file)
 	return enc.Encode(configuration)
+}
+
+func init() {
+	flag.StringVar(&WorkspaceRoot, "workspace", "", "Set the workspace root path.")
 }
